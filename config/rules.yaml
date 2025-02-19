@@ -1,0 +1,56 @@
+# PPT布局规则配置
+
+# 图片布局规则
+image_rules:
+  # 键为图片数量，值为对应的布局名称
+  '1': 'layout_single_image'      # 单图布局
+  '2': 'layout_two_images'        # 双图布局
+  '3': 'layout_three_images'      # 三图布局
+  '4': 'layout_four_images'       # 四图布局
+  'grid': 'layout_image_grid'     # 网格布局（适用于更多图片）
+
+# 视频布局规则
+video_rules:
+  'any': 'layout_video'           # 视频布局
+  'with_text': 'layout_video_text'  # 视频+文本布局
+  'with_image': 'layout_video_image' # 视频+图片布局
+
+# 文本布局规则
+text_rules:
+  'single': 'layout_text'         # 纯文本布局
+  'with_image': 'layout_text_image' # 文本+图片布局
+  'with_video': 'layout_text_video' # 文本+视频布局
+  'title_only': 'layout_title'    # 仅标题布局
+
+# 混合内容规则
+mixed_rules:
+  'image_text':
+    max_images: 2                 # 最多支持2张图片
+    layout: 'layout_mixed_image_text'
+  'video_text_image':
+    max_images: 1                 # 最多支持1张图片
+    layout: 'layout_mixed_all'
+
+# 布局优先级规则
+priority_rules:
+  - 'video'      # 优先使用视频布局
+  - 'image'      # 其次使用图片布局
+  - 'text'       # 最后使用文本布局
+
+# 自适应规则
+adaptive_rules:
+  'auto_grid':   # 当图片数量超过4张时自动使用网格布局
+    min_images: 5
+    layout: 'layout_image_grid'
+  'auto_split':  # 当内容过多时自动拆分为多页
+    max_items_per_slide: 6
+    split_strategy: 'sequential'  # 或 'balanced'
+
+# 特殊布局规则
+special_rules:
+  'cover':       # 封面页布局
+    layout: 'layout_cover'
+    position: 'first'
+  'end':         # 结束页布局
+    layout: 'layout_end'
+    position: 'last'
