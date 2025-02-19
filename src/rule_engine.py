@@ -53,36 +53,59 @@ class RuleEngine:
             logging.error(f"加载自定义规则时发生错误: {str(e)}")
             raise
     
-    def match_layout(self, content: Dict) -> str:
+    def get_rules(self) -> Dict:
         """
-        根据内容匹配最佳布局
+        获取当前规则集
+        
+        Returns:
+            Dict: 当前规则集
+        """
+        return self.rules
+    
+    def select_layout(self, content_list: List[Dict]) -> str:
+        """
+        根据内容列表选择合适的布局
         
         Args:
-            content: 内容信息字典
+            content_list: 内容项列表，每项包含 type 和 path
             
         Returns:
             str: 匹配的布局名称
         """
         try:
+            # 统计各类型内容的数量
+            type_counts = {
+                'image': 0,
+                'text': 0,
+                'video': 0
+            }
+            
+            for item in content_list:
+                item_type = item.get('type')
+                if item_type in type_counts:
+                    type_counts[item_type] += 1
+            
+            logging.info(f"内容统计: {type_counts}")
+            
             # 优先处理视频内容
-            if content.get('videos'):
+            if type_counts['video'] > 0:
                 return self.rules['video_rules']['any']
             
             # 处理图片内容
-            image_count = len(content.get('images', []))
-            if image_count > 0:
-                layout = self.rules['image_rules'].get(str(image_count))
+            if type_counts['image'] > 0:
+                layout = self.rules['image_rules'].get(str(type_counts['image']))
                 if layout:
                     return layout
             
             # 处理文本内容
-            if content.get('texts'):
-                if image_count > 0:
+            if type_counts['text'] > 0:
+                if type_counts['image'] > 0:
                     return self.rules['text_rules']['with_image']
                 return self.rules['text_rules']['single']
             
-            raise ValueError("无法找到匹配的布局")
+            # 如果没有找到合适的布局，使用默认布局
+            return 'layout_text'  # 默认使用文本布局
             
         except Exception as e:
-            logging.error(f"匹配布局时发生错误: {str(e)}")
+            logging.error(f"选择布局时发生错误: {str(e)}")
             raise

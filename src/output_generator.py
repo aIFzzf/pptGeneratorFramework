@@ -22,6 +22,34 @@ class OutputGenerator:
         self.rule_engine = RuleEngine(rules_config)
         self.content_populator = ContentPopulator(template_path)
         
+    def _process_content(self, slide, content_list):
+        """处理内容列表"""
+        image_idx = 0
+        text_idx = 0
+        video_idx = 0
+        
+        for content in content_list:
+            content_type = content.get('type')
+            content_path = content.get('path')
+            
+            if content_type == 'image':
+                self.content_populator.fill_image(slide, image_idx, content_path)
+                image_idx += 1
+            elif content_type == 'text':
+                # 读取文本文件内容
+                try:
+                    with open(content_path, 'r', encoding='utf-8') as f:
+                        text_content = f.read().strip()
+                    self.content_populator.fill_text(slide, text_idx, text_content)
+                    text_idx += 1
+                except Exception as e:
+                    logging.error(f"处理文本文件时发生错误: {str(e)}")
+            elif content_type == 'video':
+                self.content_populator.fill_video(slide, video_idx, content_path)
+                video_idx += 1
+            else:
+                logging.warning(f"未知的内容类型: {content_type}")
+                
     def generate(self, output_path: str):
         """
         生成PPT文件
@@ -30,48 +58,35 @@ class OutputGenerator:
             output_path: 输出文件路径
         """
         try:
-            # 1. 解析模板
-            layouts_info = self.template_parser.parse()
-            logging.info("模板解析完成")
-            
-            # 2. 加载内容
+            # 扫描内容
             content_groups = self.content_loader.scan_content()
-            logging.info("内容加载完成")
+            logging.info(f"找到 {len(content_groups)} 个内容组")
             
-            # 3. 处理每个内容组
+            # 获取布局规则
+            layout_rules = self.rule_engine.get_rules()
+            
+            # 处理每个内容组
             for group_name, content in content_groups.items():
                 try:
-                    # 根据规则匹配布局
-                    layout_name = self.rule_engine.match_layout(content)
+                    logging.info(f"\n开始处理内容组: {group_name}")
+                    
+                    # 根据内容类型和数量选择布局
+                    layout_name = self.rule_engine.select_layout(content)
+                    logging.info(f"选择布局: {layout_name}")
                     
                     # 创建新幻灯片，使用组名作为标题
                     slide, layout = self.content_populator.add_slide(layout_name, title=group_name)
                     
-                    # 填充图片
-                    for idx, image_path in enumerate(content['images']):
-                        self.content_populator.fill_image(slide, idx, image_path)
+                    # 处理内容
+                    self._process_content(slide, content)
                     
-                    # 填充文本
-                    for idx, text_path in enumerate(content['texts']):
-                        text_content = self.content_loader.load_text_content(text_path)
-                        print(text_content)
-                        self.content_populator.fill_text(slide, len(content['images']) + idx, 
-                                                       text_content)
-                    
-                    # 填充视频
-                    for idx, video_path in enumerate(content['videos']):
-                        self.content_populator.fill_video(slide, 
-                                                        len(content['images']) + 
-                                                        len(content['texts']) + idx,
-                                                        video_path)
-                        
                 except Exception as e:
                     logging.error(f"处理内容组 {group_name} 时发生错误: {str(e)}")
                     continue
-            
-            # 4. 保存文件
+                
+            # 保存文件
             self.content_populator.save(output_path)
-            logging.info(f"PPT生成完成，已保存至: {output_path}")
+            logging.info(f"PPT文件已保存: {output_path}")
             
         except Exception as e:
             logging.error(f"生成PPT时发生错误: {str(e)}")

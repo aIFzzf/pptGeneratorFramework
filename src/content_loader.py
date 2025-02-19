@@ -29,25 +29,30 @@ class ContentLoader:
         try:
             for item in self.content_dir.iterdir():
                 if item.is_dir():
-                    group_content = {
-                        'images': [],
-                        'texts': [],
-                        'videos': [],
-                    }
+                    group_content = []
                     
                     # 扫描图片
                     for img_file in item.glob('**/*'):
                         if img_file.suffix.lower() in self.SUPPORTED_IMAGE_FORMATS:
-                            group_content['images'].append(str(img_file))
+                            group_content.append({
+                                'type': 'image',
+                                'path': str(img_file)
+                            })
                             
                     # 扫描文本
                     for text_file in item.glob('**/*.txt'):
-                        group_content['texts'].append(str(text_file))
+                        group_content.append({
+                            'type': 'text',
+                            'path': str(text_file)
+                        })
                         
                     # 扫描视频
                     for video_file in item.glob('**/*'):
                         if video_file.suffix.lower() in self.SUPPORTED_VIDEO_FORMATS:
-                            group_content['videos'].append(str(video_file))
+                            group_content.append({
+                                'type': 'video',
+                                'path': str(video_file)
+                            })
                     
                     self.content_groups[item.name] = group_content
             
