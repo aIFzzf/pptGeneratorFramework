@@ -32,9 +32,12 @@ ENV/
 *.swo
 
 # Project specific
-/content/
-/output/
-/templates/
+/content/*
+!/content/.gitkeep
+/output/*
+!/output/.gitkeep
+/templates/*
+!/templates/.gitkeep
 
 # System
 .DS_Store
